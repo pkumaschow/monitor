@@ -1,0 +1,7 @@
+# prometheus.yml
+global:
+    scrape_interval: 5s
+    external_labels:
+        monitor: 'monitor'
+scrape_configs:
+    - job_name: 'prometheus'
