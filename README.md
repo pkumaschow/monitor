@@ -2,13 +2,26 @@
 
 Docker compose for Prometheus, Grafana, Prometheus Pushgateway and the Prometheus Node Exporter
 
+`docker-compose up`
+
 I have Cockpit running on port 9090 so I mapped prometheus to 9900
 
-If se-linux is enforcing on your docker host either set it to permissive or run:
+
+## Push Gateway
+
+Metrics can be pushed to the prometheus via the PushGateway using the test script in the scripts directory.
+
+
+## Prometheus container fails to start?
+
+se-linux might be set to enforcing which can cause problems with docker volumes
+
+Either set it to permissive or run:
 
 `chcon -Rt svirt_sandbox_file_t ./prometheus.yml`
 
-Links:
+
+## Links:
 
 https://github.com/prometheus/prometheus
 
