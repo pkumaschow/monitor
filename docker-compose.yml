@@ -12,6 +12,10 @@ services:
         image: prom/node-exporter:v0.17.0
         ports: 
             - "9100:9100"
+    pushgateway:
+        image: prom/pushgateway
+        ports:
+            - "9091:9091"
     grafana:
         image: grafana/grafana:5.4.2
         environment:
