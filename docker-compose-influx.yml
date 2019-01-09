@@ -6,30 +6,37 @@ services:
         - influxdb
       stdin_open: true
       tty: true
-      privileged: true
+#      privileged: true
+      networks:
+        - influxdb
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock:ro
         - /sys:/rootfs/sys:ro
         - /proc:/rootfs/proc:ro
         - /etc:/rootfs/etc:ro
         - /var/run/utmp:/var/run/utmp
-        - ./config/telegraf/telegraf.conf:/root/telegraf.conf:ro
-
+        - ./config/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       environment:
-        - TELEGRAF_CONFIG_PATH=/root/telegraf.conf
+        - TELEGRAF_CONFIG_PATH=/etc/telegraf/telegraf.conf
         - OUTPUT_INFLUXDB_ENABLED=true
         - INPUT_DOCKER_ENABLED=true
+        - INPUT_SYSTEM_ENABLED=true
         - HOST_PROC=/rootfs/proc
         - HOST_SYS=/rootfs/sys
         - HOST_ETC=/rootfs/etc
+      ports:
+        - "8125:8125"
+        - "8092:8092"
+        - "8094:8094"
 
     influxdb:
       image: influxdb:1.7.2-alpine
       ports:
         - "8086:8086"
         - "8083:8083"
-#      volumes:
-#        - ./files/influxdb:/etc/influxdb
+        - "8090:8090"
+      volumes:
+        - ./config/influxdb/influxdb.conf:/etc/influxdb/influxdb.conf:ro
       environment:
         - FORCE_HOSTNAME=auto
         - INFLUXDB_ADMIN_ENABLED=true
@@ -43,8 +50,9 @@ services:
         - INFLUXDB_READ_USER_PASSWORD=password
         - INFLUXDB_WRITE_USER=dbWriter
         - INFLUXDB_WRITE_USER_PASSWORD=password
-
-#        - INFLUXDB_CONFIG_PATH: /etc/influxdb/influxdb.conf
+        - INFLUXDB_CONFIG_PATH=/etc/influxdb/influxdb.conf
+      networks:
+        - influxdb
 
     chronograf:
       image: chronograf:1.7.5-alpine
@@ -54,6 +62,8 @@ services:
         - INFLUXDB_URL=http://influxdb:8086
         - INFLUXDB_USERNAME=dbReader
         - INFLUXDB_PASSWORD=password
+      networks:
+        - influxdb        
 
     kapacitor:
       image: kapacitor:1.5.2-alpine
@@ -67,14 +77,25 @@ services:
         - KAPACITOR_INFLUXDB_SUBSCRIPTION_MODE=server
         - KAPACITOR_INFLUXDB_SUBSCRIPTION_PROTOCOL=http
         - KAPACITOR_INFLUXDB_KAPACITOR_HOSTNAME=kapacitor
+      volumes:
+        - ./config/kapacitor/kapacitor.conf:/etc/kapacitor.conf:ro
+      networks:
+        - influxdb
+      depends_on:
+        - influxdb
 
     grafana:
       image: grafana/grafana:5.4.2
       ports:
         - "0.0.0.0:3000:3000"
       volumes:
-        - ./files/grafana:/etc/extra-config/grafana
+        - ./config/grafana:/etc/extra-config/grafana:ro
       environment:
         - GRAFANA_USER=admin
         - GRAFANA_PASS=admin
- 
+      networks:
+        - influxdb
+
+networks:
+  influxdb:
+    driver: bridge
