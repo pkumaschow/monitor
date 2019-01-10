@@ -62,6 +62,7 @@ services:
         - INFLUXDB_URL=http://influxdb:8086
         - INFLUXDB_USERNAME=dbReader
         - INFLUXDB_PASSWORD=password
+        - KAPACITOR_URL=http://kapacitor:9092
       networks:
         - influxdb        
 
@@ -82,18 +83,6 @@ services:
       networks:
         - influxdb
       depends_on:
-        - influxdb
-
-    grafana:
-      image: grafana/grafana:5.4.2
-      ports:
-        - "0.0.0.0:3000:3000"
-      volumes:
-        - ./config/grafana:/etc/extra-config/grafana:ro
-      environment:
-        - GRAFANA_USER=admin
-        - GRAFANA_PASS=admin
-      networks:
         - influxdb
 
 networks:
