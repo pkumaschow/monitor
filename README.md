@@ -12,8 +12,6 @@ Prometheus, Grafana, Prometheus Pushgateway and the Prometheus Node Exporter
 I have Cockpit running on port 9090 so I mapped prometheus to 9900
 
 
-## Push Gateway
-=======
 ### Push Gateway
 
 Metrics can be pushed to the prometheus via the PushGateway using the test script in the scripts directory.
