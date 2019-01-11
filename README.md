@@ -6,6 +6,8 @@ Docker compose for Prometheus, Grafana, Prometheus Pushgateway and the Prometheu
 
 I have Cockpit running on port 9090 so I mapped prometheus to 9900
 
+Don't use this for production it is wide open to abuse. 
+
 
 ## Push Gateway
 
