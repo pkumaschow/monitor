@@ -25,6 +25,10 @@ Either set it to permissive or run:
 
 `chcon -Rt svirt_sandbox_file_t ./prometheus.yml`
 
+or use :z on the volume:
+
+`- ./config/prometheus.yml:/etc/prometheus/prometheus.yml:z`
+
 ## TICK Stack
 
 Influxdb, Chronograf, Telegraf, Kapacitor, 

@@ -7,22 +7,19 @@ processors:
 
 output.elasticsearch:
   hosts: ['elasticsearch:9200']
-  username: elastic
-  password: changeme
+#  username: elastic
+#  password: changeme
+
+setup.dashboards.enabled: true
+
+setup.kibana:
+  host: "kibana:5601"
 
 metricbeat.modules:
-- module: docker
-  metricsets:
-    - "container"
-    - "cpu"
-    - "diskio"
-    - "healthcheck"
-    - "info"
-    #- "image"
-    - "memory"
-    - "network"
-  hosts: ["unix:///var/run/docker.sock"]
-  period: 10s
-  enabled: true
-
-
+  - module: kibana
+    metricsets: ["status"]
+    period: 10s
+    hosts: ["kibana:5601"]
+    basepath: ""
+    enabled: true
+    
