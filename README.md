@@ -31,6 +31,23 @@ Influxdb, Chronograf, Telegraf, Kapacitor,
 
 `docker-compose up -f docker-compose-influx.yml up`
 
+## Elasticsearch / Kibana
+
+`docker-compose up -f docker-compose-elasticsearch.yml up`
+
+Latest docker image 6.5.4 fails to start on Fedora with 
+
+`[1]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]`
+
+Workaround is
+
+`sysctl -w vm.max_map_count=262144`
+
+or make this change permanent by editing /etc/sysctl.conf
+
+Image started OK on Mojave.
+
+
 ## Links:
 
 https://github.com/prometheus/prometheus
