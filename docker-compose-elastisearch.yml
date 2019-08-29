@@ -21,13 +21,14 @@ services:
                 ipv4_address: 172.16.238.10
 
     filebeat:
+        user: root
         image: docker.elastic.co/beats/filebeat:7.0.1
         depends_on:
             elasticsearch1:  { condition: service_healthy }
-        command: filebeat -e -strict.perms=false 
+        command: filebeat -e -strict.perms=false
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:z
-            # - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
             - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:z
             - ./config/filebeat/modules.d/:/usr/share/filebeat/modules.d/:z
         environment:
@@ -42,8 +43,8 @@ services:
     metricbeat:
         image: docker.elastic.co/beats/metricbeat:7.0.1
         depends_on:
-            elasticsearch1:  { condition: service_healthy }
-        command: metricbeat -e -system.hostfs=/hostfs -E output.elasticsearch.username=elastic -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD:-elastic} -strict.perms=false            
+            kibana:  { condition: service_healthy }
+        command: metricbeat -e -system.hostfs=/hostfs -E output.elasticsearch.username=elastic -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD:-elastic} -strict.perms=false
         volumes:
             - ./config/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:z
             - ./config/metricbeat/modules.d/docker.yml:/usr/share/metricbeat/modules.d/docker.yml:z
