@@ -6,6 +6,6 @@
     - node
     - node_stats
   period: 10s
-  hosts: ["http://elasticsearch:9200"]
+  hosts: ["http://elasticsearch1:9200"]
   #username: "user"
   #password: "secret"
