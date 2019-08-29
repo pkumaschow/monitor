@@ -1,47 +1,83 @@
-version: "2.1"
+version: "2.2"
 services:
-    elasticsearch:
-        image: elasticsearch:6.5.4
+    elasticsearch1:
+        image: elasticsearch:7.0.1
+        environment: 
+            - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
         ports:
-            - "9200:9200"
-            - "9300:9300"
+          - 9200:9200
+          - 9300:9300
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
         volumes:
             - ./config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:z
-            - esdata:/usr/share/elasticsearch/data
+            - esdata1:/usr/share/elasticsearch/data
         healthcheck:
-            test: ["CMD", "curl","-s" ,"-f", "-u", "elastic:${ES_PASSWORD}", "http://localhost:9200/_cat/health"]            
+            test: ["CMD", "curl","-s" ,"-f", "-u", "elastic:${ELASTICSEARCH_PASSWORD}", "http://elasticsearch1:9200/_cat/health"]            
         networks:
-            - elasticbridge
+            elasticbridge:
+                ipv4_address: 172.16.238.10
+
+    filebeat:
+        image: docker.elastic.co/beats/filebeat:7.0.1
+        depends_on:
+            elasticsearch1:  { condition: service_healthy }
+        command: filebeat -e -strict.perms=false 
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:z
+            # - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+            - ./config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:z
+            - ./config/filebeat/modules.d/:/usr/share/filebeat/modules.d/:z
+        environment:
+            - ELASTICSEARCH_HOST=elasticsearch1
+            - KIBANA_HOST=kibana
+            - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:-elastic}
+            - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-'changeme'}
+        networks:
+            elasticbridge:
+                ipv4_address: 172.16.238.12
 
     metricbeat:
-        image: docker.elastic.co/beats/metricbeat:6.5.4
+        image: docker.elastic.co/beats/metricbeat:7.0.1
         depends_on:
-            elasticsearch:  { condition: service_healthy }
-        command: metricbeat -e -system.hostfs=/hostfs -E output.elasticsearch.username=elastic -E output.elasticsearch.password=${ES_PASSWORD} -strict.perms=false            
+            elasticsearch1:  { condition: service_healthy }
+        command: metricbeat -e -system.hostfs=/hostfs -E output.elasticsearch.username=elastic -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD:-elastic} -strict.perms=false            
         volumes:
             - ./config/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:z
             - ./config/metricbeat/modules.d/docker.yml:/usr/share/metricbeat/modules.d/docker.yml:z
             - ./config/metricbeat/modules.d/kibana.yml:/usr/share/metricbeat/modules.d/kibana.yml:z
             - ./config/metricbeat/modules.d/elasticsearch.yml:/usr/share/metricbeat/modules.d/elasticsearch.yml:z
-            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /var/run/docker.sock:/var/run/docker.sock:z
             - /proc:/hostfs/proc:ro
             - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
         networks:
-            - elasticbridge
+            elasticbridge:
+                ipv4_address: 172.16.238.14
 
     kibana:
-        image: kibana:6.5.4
+        image: kibana:7.0.1
         depends_on:
-            - elasticsearch
+            elasticsearch1: { condition: service_healthy }
+        links:
+            - elasticsearch1
+        environment:
+            - ELASTICSEARCH_URL=http://elasticsearch1:9200
+            - ELASTICSEARCH_USERNAME=elastic
+            - ELASTICSEARCH_HOST=elasticsearch1
+            - ELASTICSEARCH_PORT=9200
+            - ELASTIC_PWD=
         ports: 
             - "5601:5601"
         healthcheck:
             test: ["CMD", "curl", "-s", "-f", "http://localhost:5601/login"]
-            retries: 5           
+            retries: 5
         volumes:
             - ./config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
         networks:
-            - elasticbridge
+            elasticbridge:
+                ipv4_address: 172.16.238.16
 
 #   configure_stack:
 #     container_name: configure_stack
@@ -49,15 +85,20 @@ services:
 #     volumes: ['./init/configure-stack.sh:/usr/local/bin/configure-stack.sh:ro','./init/pipelines/:/usr/local/bin/pipelines/','./init/templates/:/usr/local/bin/templates/']
 #     command: ['/bin/bash', '-c', 'cat /usr/local/bin/configure-stack.sh | tr -d "\r" | bash']
 #     networks: ['elasticbridge']
-#     environment: ['ELASTIC_VERSION=${ELASTIC_VERSION}','ES_PASSWORD=${ES_PASSWORD}','DEFAULT_INDEX_PATTERN=${DEFAULT_INDEX_PATTERN}']
+#     environment: ['ELASTIC_VERSION=${ELASTIC_VERSION}','ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD}','DEFAULT_INDEX_PATTERN=${DEFAULT_INDEX_PATTERN}']
 #     depends_on: ['elasticsearch','kibana']
 
 
 networks:
   elasticbridge:
-    driver: bridge
+      driver: bridge
+      ipam:
+          driver: default
+          config:
+              - subnet: 172.16.238.0/24
 
 volumes:
-  esdata:
+  esdata1:
     driver: local
+
 

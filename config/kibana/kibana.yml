@@ -2,8 +2,8 @@
 # Default Kibana configuration from kibana-docker.
 
 server.name: kibana
-server.host: "0"
-elasticsearch.url: http://elasticsearch:9200
-xpack.monitoring.ui.container.elasticsearch.enabled: true
-xpack.monitoring.enabled: true
-xpack.monitoring.kibana.collection.enabled: true
+server.host: "0.0.0.0"
+elasticsearch.hosts: ["http://elasticsearch1:9200"]
+xpack.monitoring.ui.container.elasticsearch.enabled: false
+xpack.monitoring.enabled: false
+xpack.monitoring.kibana.collection.enabled: false
