@@ -1,7 +1,7 @@
 version: "2.2"
 services:
     elasticsearch1:
-        image: elasticsearch:7.0.1
+        image: elasticsearch:7.3.1
         environment: 
             - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
         ports:
@@ -22,7 +22,7 @@ services:
 
     filebeat:
         user: root
-        image: docker.elastic.co/beats/filebeat:7.0.1
+        image: docker.elastic.co/beats/filebeat:7.3.1
         depends_on:
             elasticsearch1:  { condition: service_healthy }
         command: filebeat -e -strict.perms=false
@@ -41,7 +41,8 @@ services:
                 ipv4_address: 172.16.238.12
 
     metricbeat:
-        image: docker.elastic.co/beats/metricbeat:7.0.1
+        user: root
+        image: docker.elastic.co/beats/metricbeat:7.3.1
         depends_on:
             kibana:  { condition: service_healthy }
         command: metricbeat -e -system.hostfs=/hostfs -E output.elasticsearch.username=elastic -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD:-elastic} -strict.perms=false
@@ -58,7 +59,7 @@ services:
                 ipv4_address: 172.16.238.14
 
     kibana:
-        image: kibana:7.0.1
+        image: kibana:7.3.1
         depends_on:
             elasticsearch1: { condition: service_healthy }
         links:
